@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,14 +21,24 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 import java.util.ArrayList;
 
-public class Principal extends Activity implements LocationListener {
+public class Principal extends FragmentActivity implements OnMapReadyCallback,LocationListener {
 
 
     private ArrayList<String> localizacions;
     private ArrayAdapter<String> adaptador;
 
+    // Google Maps variables
+    private GoogleMap mMap;
+    // Geolocation variables
     private LocationManager locManager;
     private String provedor;
 
@@ -41,13 +52,28 @@ public class Principal extends Activity implements LocationListener {
         //setSupportActionBar(toolbar);
 
 
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+
 
         localizacions = new ArrayList<String>();
-        adaptador = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, localizacions);
-        ListView listaGPS = (ListView)findViewById(R.id.UD6_01_lstListaCoordGPS);
-        listaGPS.setAdapter(adaptador);
+        //adaptador = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, localizacions);
+        //ListView listaGPS = (ListView)findViewById(R.id.UD6_01_lstListaCoordGPS);
+        //listaGPS.setAdapter(adaptador);
 
         obterprovedores();
+
+
+        locManager.requestLocationUpdates(provedor, 0, 500, Principal.this);
+        Toast.makeText(getApplicationContext(), "Comenzado a rexistrar...", Toast.LENGTH_SHORT).show();
+
+        Location last = locManager.getLastKnownLocation(provedor);
+        if (last != null)
+            localizacions.add("ULTIMA COÑECIDA: LAT:" + String.valueOf(last.getLatitude()) + " - LONX:" + String.valueOf(last.getLongitude()));
+
 
 
 
@@ -83,6 +109,16 @@ public class Principal extends Activity implements LocationListener {
         });
 
     }*/
+
+
+    // Method for the map once ready
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        mMap.addMarker(new MarkerOptions()
+                .position(mMap.getCameraPosition().target)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)));
+    }
 
 
     public void pararRegistrar(View v) throws Exception{
@@ -160,7 +196,14 @@ public class Principal extends Activity implements LocationListener {
     public void onLocationChanged(Location location) {
         // TODO Auto-generated method stub
         localizacions.add("LATITUDE:" + String.valueOf(location.getLatitude()) + " - LONXITUDE:" + String.valueOf(location.getLongitude()));
-        adaptador.notifyDataSetChanged();
+//        adaptador.notifyDataSetChanged();
+        LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());  // Posición de Santiago de Compostela
+        //mMap = googleMap;
+        mMap.clear();
+        mMap.addMarker(new MarkerOptions()
+                .position(pos)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)));
+
     }
 
 
